@@ -1,2 +1,2 @@
 # webrtc-java
-RTSP to WebRTC using Java.
+RTSP to WebRTC video streaming client using Java.
