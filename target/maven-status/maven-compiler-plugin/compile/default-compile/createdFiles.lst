@@ -1,11 +1,8 @@
 com/example/webrtc/Main.class
-com/example/webrtc/WebRtcWebMessageHandler$1.class
-com/example/webrtc/WebRtcWebSocketClient1$1.class
-com/example/webrtc/WebRtcWebSocketHandler.class
-com/example/webrtc/WebRtcWebSocketClient1$WebRtcWebSocketHandler.class
-com/example/webrtc/WebRtcWebSocketClient1.class
 com/example/webrtc/WebRtcWebMessageHandler.class
+com/example/webrtc/WebRtcWebMessageHandler$1.class
 com/example/webrtc/model/WebRtcSignalingMessageType.class
 com/example/webrtc/WebRTCPeerConnection.class
+com/example/webrtc/WebRtcWebSocketHandler.class
 com/example/webrtc/WebRtcWebSocketClient.class
 com/example/webrtc/model/WebRtcSignalingMessage.class

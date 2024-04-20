@@ -22,5 +22,6 @@ public class WebRtcWebSocketClient implements AutoCloseable {
     @Override
     public void close() throws Exception {
         logger.info("Closing WebSocket client");
+        connectionManager.stop();
     }
 }

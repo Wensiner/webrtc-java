@@ -1,5 +1,7 @@
 package com.example.webrtc;
 
+import java.io.IOException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.socket.WebSocketSession;
@@ -8,6 +10,7 @@ import com.example.webrtc.model.WebRtcSignalingMessage;
 
 public class WebRtcWebMessageHandler {
     private static final Logger logger = LogManager.getLogger(WebRtcWebMessageHandler.class);
+    private static final long ID = 1L;
 
     private WebRtcWebMessageHandler() {
         // Private constructor to hide the implicit public one
@@ -54,6 +57,11 @@ public class WebRtcWebMessageHandler {
         logger.info("WebSocket connection established with session: {}", session.getId());
 
         // Handle the WebSocket connection established event
+        try {
+            session.sendMessage(new WebRtcSignalingMessage(ID).toTextMessage());
+        } catch (IOException e) {
+            logger.error("Error sending REGISTER message: {}", e.getMessage());
+        }
     }
 
     public static void onConnectionClosed(WebSocketSession session) {
