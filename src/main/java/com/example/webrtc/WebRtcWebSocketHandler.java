@@ -10,30 +10,42 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com.example.webrtc.model.WebRtcSignalingMessage;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WebRtcWebSocketHandler implements WebSocketHandler {
     private static final Logger logger = LogManager.getLogger(WebRtcWebSocketHandler.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private WebSocketSession webSocketSession;
+
+    // Send message
+    public boolean sendMessage(WebRtcSignalingMessage message) {
+        if (webSocketSession == null) {
+            logger.error("WebSocket session is null, cannot send message");
+        } else {
+            try {
+                webSocketSession.sendMessage(message.toTextMessage());
+                return true;
+            } catch (Exception e) {
+                logger.error("Error sending WebSocket message: {}", e.getMessage());
+            }
+        }
+        return false;
+    }
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         logger.info("WebSocket connection established with session: {}", session.getId());
-        WebRtcWebMessageHandler.onConnectionEstablished(session);
+        this.webSocketSession = session;
+        WebRtcWebMessageHandler.onConnectionEstablished();
     }
 
     @Override
     public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
             throws Exception {
         if (message instanceof TextMessage) {
-            String content = ((TextMessage) message).getPayload();
-            logger.info("Received WebSocket message: {}", content);
+            String textMessage = ((TextMessage) message).getPayload();
+            logger.info("Received WebSocket message: {}", textMessage);
 
-            // Convert the JSON payload to a WebRtcSignalingMessage object
             try {
-                WebRtcSignalingMessage signalingMessage = objectMapper.readValue(content,
-                        WebRtcSignalingMessage.class);
-                WebRtcWebMessageHandler.handleMessage(session, signalingMessage);
+                WebRtcWebMessageHandler.handleMessage(new WebRtcSignalingMessage(textMessage));
             } catch (Exception e) {
                 logger.error("Error processing WebSocket message: {}", e.getMessage());
             }
@@ -53,7 +65,7 @@ public class WebRtcWebSocketHandler implements WebSocketHandler {
             throws Exception {
         logger.info("WebSocket connection closed with session id {} as: {}", session.getId(),
                 closeStatus.getReason());
-        WebRtcWebMessageHandler.onConnectionClosed(session);
+        WebRtcWebMessageHandler.onConnectionClosed();
     }
 
     @Override

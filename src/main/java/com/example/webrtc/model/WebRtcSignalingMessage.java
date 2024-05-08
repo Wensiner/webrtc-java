@@ -5,26 +5,24 @@ import org.springframework.web.socket.TextMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.onvoid.webrtc.RTCIceCandidate;
+
+/**
+ * A WebRTC signaling message.
+ * It can be used to send messages to remote peer via WebSocket server.
+ */
 public class WebRtcSignalingMessage {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     private String from;
     private String to;
     private WebRtcSignalingMessageType type;
     private String payload;
 
-    public WebRtcSignalingMessage(long id) {
-        this.type = WebRtcSignalingMessageType.REGISTER;
-        this.payload = String.valueOf(id);
-    }
-    public WebRtcSignalingMessage(WebRtcSignalingMessageType type, String to, String payload) {
-        this.type = type;
-        this.to = to;
-        this.payload = payload;
-    }
-    public WebRtcSignalingMessage(WebRtcSignalingMessageType type, String from, String to, String payload) {
-        this.type = type;
-        this.from = from;
-        this.to = to;
-        this.payload = payload;
+    /**
+     * Jackson requires a public no-argument constructor to deserialize objects.
+     */
+    public WebRtcSignalingMessage() {
     }
 
     public String getFrom() {
@@ -59,7 +57,62 @@ public class WebRtcSignalingMessage {
         this.payload = payload;
     }
 
+    /**
+     * Convert the WebRtcSignalingMessage to a TextMessage.
+     * 
+     * @return The TextMessage representation of the WebRtcSignalingMessage.
+     * @throws JsonProcessingException If the message cannot be serialized.
+     */
     public TextMessage toTextMessage() throws JsonProcessingException {
-        return new TextMessage(new ObjectMapper().writeValueAsString(this));
+        return new TextMessage(objectMapper.writeValueAsString(this));
+    }
+
+    /**
+     * Create a copy of the given WebRtcSignalingMessage.
+     * 
+     * @param message The message to copy.
+     */
+    public WebRtcSignalingMessage(WebRtcSignalingMessage message) {
+        this.from = message.from;
+        this.to = message.to;
+        this.type = message.type;
+        this.payload = message.payload;
+    }
+
+    /**
+     * Convert to WebRTC signaling message from a text message.
+     * 
+     * @param textMessage The text message to parse.
+     * @throws JsonProcessingException If the message cannot be deserialized.
+     */
+    public WebRtcSignalingMessage(String textMessage) throws JsonProcessingException {
+        WebRtcSignalingMessage obj = objectMapper.readValue(textMessage, WebRtcSignalingMessage.class);
+        this.from = obj.from;
+        this.to = obj.to;
+        this.type = obj.type;
+        this.payload = obj.payload;
+    }
+
+    /**
+     * Create a REGISTER message with the given ID.
+     * 
+     * @param id The ID to register.
+     */
+    public WebRtcSignalingMessage(long id) {
+        this.type = WebRtcSignalingMessageType.REGISTER;
+        this.payload = String.valueOf(id);
+    }
+
+    /**
+     * Create a new WebRTC signaling message from an ICE candidate.
+     * 
+     * @param to        The receiver of the message.
+     * @param candidate The ICE candidate.
+     * @throws JsonProcessingException If the message cannot be serialized.
+     */
+    public WebRtcSignalingMessage(String to, RTCIceCandidate candidate) throws JsonProcessingException {
+        this.type = WebRtcSignalingMessageType.CANDIDATE;
+        this.to = to;
+        this.payload = objectMapper.writeValueAsString(candidate);
     }
 }
