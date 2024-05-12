@@ -9,12 +9,7 @@ public class Main {
     public static void main(String[] args) {
         logger.info("Hello, World!");
 
-        try (WebRtcWebSocketClient client = new WebRtcWebSocketClient()) {
-            logger.info("WebSocket client started.");
-
-        } catch (Exception e) {
-            logger.error("Error:", e);
-        }
+        new WebRtcMediator(12345L).act();
 
         // Wait for the application to finish
         try {

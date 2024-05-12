@@ -17,6 +17,10 @@ public class MediaStreamManager {
         return requestedUrls;
     }
 
+    public static String[] getAvailableUrls(String payload) {
+        return getAvailableUrls(getRequestedUrls(payload));
+    }
+
     public static Object getMediaStream(String[] availableUrls, String from) {
         throw new UnsupportedOperationException("Unimplemented method 'getMediaStream'");
     }

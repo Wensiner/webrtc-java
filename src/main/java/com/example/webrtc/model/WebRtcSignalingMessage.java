@@ -106,13 +106,27 @@ public class WebRtcSignalingMessage {
     /**
      * Create a new WebRTC signaling message from an ICE candidate.
      * 
-     * @param to        The receiver of the message.
+     * @param peer      The receiver of the message.
      * @param candidate The ICE candidate.
      * @throws JsonProcessingException If the message cannot be serialized.
      */
-    public WebRtcSignalingMessage(String to, RTCIceCandidate candidate) throws JsonProcessingException {
+    public WebRtcSignalingMessage(String peer, RTCIceCandidate candidate) throws JsonProcessingException {
         this.type = WebRtcSignalingMessageType.CANDIDATE;
-        this.to = to;
+        this.to = peer;
         this.payload = objectMapper.writeValueAsString(candidate);
     }
+
+    /**
+     * Create a new WebRTC signaling message from a peer and a list of media stream
+     * URLs.
+     * 
+     * @param peer The peer to send the message to.
+     * @param urls The list of ICE server URLs.
+     */
+    public WebRtcSignalingMessage(String peer, String[] urls) {
+        this.type = WebRtcSignalingMessageType.RESPONSE;
+        this.to = peer;
+        this.payload = String.join(",", urls);
+    }
+
 }

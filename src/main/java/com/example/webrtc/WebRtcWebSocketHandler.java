@@ -1,5 +1,7 @@
 package com.example.webrtc;
 
+import java.io.IOException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.lang.NonNull;
@@ -13,28 +15,34 @@ import com.example.webrtc.model.WebRtcSignalingMessage;
 
 public class WebRtcWebSocketHandler implements WebSocketHandler {
     private static final Logger logger = LogManager.getLogger(WebRtcWebSocketHandler.class);
-    private WebSocketSession webSocketSession;
 
-    // Send message
-    public boolean sendMessage(WebRtcSignalingMessage message) {
+    private WebSocketSession webSocketSession;
+    private WebRtcMessagingHandler messageHandler;
+
+    public WebRtcWebSocketHandler(final WebRtcMessagingHandler messageHandler) {
+        super();
+        this.messageHandler = messageHandler;
+    }
+
+    public void sendMessage(WebRtcSignalingMessage message) throws WebSocketSessionNullException, IOException {
         if (webSocketSession == null) {
-            logger.error("WebSocket session is null, cannot send message");
+            throw new WebSocketSessionNullException("WebSocket session is null, cannot send message");
         } else {
-            try {
-                webSocketSession.sendMessage(message.toTextMessage());
-                return true;
-            } catch (Exception e) {
-                logger.error("Error sending WebSocket message: {}", e.getMessage());
-            }
+            webSocketSession.sendMessage(message.toTextMessage());
         }
-        return false;
+    }
+
+    public class WebSocketSessionNullException extends Exception {
+        public WebSocketSessionNullException(String message) {
+            super(message);
+        }
     }
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         logger.info("WebSocket connection established with session: {}", session.getId());
         this.webSocketSession = session;
-        WebRtcWebMessageHandler.onConnectionEstablished();
+        messageHandler.onConnectionEstablished();
     }
 
     @Override
@@ -45,7 +53,7 @@ public class WebRtcWebSocketHandler implements WebSocketHandler {
             logger.info("Received WebSocket message: {}", textMessage);
 
             try {
-                WebRtcWebMessageHandler.handleMessage(new WebRtcSignalingMessage(textMessage));
+                messageHandler.handleMessage(new WebRtcSignalingMessage(textMessage));
             } catch (Exception e) {
                 logger.error("Error processing WebSocket message: {}", e.getMessage());
             }
@@ -65,7 +73,7 @@ public class WebRtcWebSocketHandler implements WebSocketHandler {
             throws Exception {
         logger.info("WebSocket connection closed with session id {} as: {}", session.getId(),
                 closeStatus.getReason());
-        WebRtcWebMessageHandler.onConnectionClosed();
+        messageHandler.onConnectionClosed();
     }
 
     @Override
