@@ -1,7 +1,10 @@
 package com.example.webrtc;
 
-public class WebRtcMessagingClient implements AutoCloseable{
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+public class WebRtcMessagingClient implements AutoCloseable {
+    private static final Logger logger = LogManager.getLogger(WebRtcMessagingClient.class);
     private final WebRtcMessagingHandler messageHandler;
 
     public WebRtcMessagingClient(long id) {
@@ -10,11 +13,11 @@ public class WebRtcMessagingClient implements AutoCloseable{
 
     @Override
     public void close() throws Exception {
-        throw new UnsupportedOperationException("Unimplemented method 'close'");
+        logger.info("Closing WebRtcMessaging client");
     }
 
     public WebRtcMessagingHandler getMessageHandler() {
-        return messageHandler   ;
+        return messageHandler;
     }
 
     public void setWebSocketClient(WebRtcWebSocketClient socketClient) {

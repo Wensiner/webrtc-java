@@ -9,16 +9,16 @@ public class MediaStreamManager {
         // private constructor to hide the implicit public one
     }
 
-    public static String[] getRequestedUrls(String payload) {
+    public static String[] parseRequestedUrls(String payload) {
         return payload.split(",");
     }
 
-    public static String[] getAvailableUrls(String[] requestedUrls) {
-        return requestedUrls;
+    public static String[] getAvailableUrls(String[] payload) {
+        return payload;
     }
 
     public static String[] getAvailableUrls(String payload) {
-        return getAvailableUrls(getRequestedUrls(payload));
+        return getAvailableUrls(parseRequestedUrls(payload));
     }
 
     public static Object getMediaStream(String[] availableUrls, String from) {

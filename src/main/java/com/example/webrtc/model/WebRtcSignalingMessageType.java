@@ -1,7 +1,7 @@
 package com.example.webrtc.model;
 
 /**
- * WebRTC signaling message types.
+ * The type of a WebRTC signaling message.
  */
 public enum WebRtcSignalingMessageType {
     CONFIG,

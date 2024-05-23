@@ -4,8 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.example.webrtc.model.WebRtcSignalingMessage;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.onvoid.webrtc.RTCConfiguration;
 
@@ -74,17 +72,20 @@ public class WebRtcMessagingHandler {
     }
 
     private void handleErrorMessage(WebRtcSignalingMessage message) {
+        PeerConnectionManager.closeConnection(message);
     }
 
     private void handleCandidateMessage(WebRtcSignalingMessage message) {
+        PeerConnectionManager.addIceCandidate(message);
     }
 
     private void handleAnswerMessage(WebRtcSignalingMessage message) {
+        PeerConnectionManager.addAnswer(message);
     }
 
-    private void handleRequestMessage(WebRtcSignalingMessage signalingMessage) {
-        String peer = signalingMessage.getFrom();
-        String[] urls = MediaStreamManager.getAvailableUrls(signalingMessage.getPayload());
+    private void handleRequestMessage(WebRtcSignalingMessage message) {
+        String peer = message.getFrom();
+        String[] urls = MediaStreamManager.getAvailableUrls(message.getPayload());
 
         try {
             webSocketClient.sendMessage(new WebRtcSignalingMessage(peer, urls));
@@ -102,20 +103,14 @@ public class WebRtcMessagingHandler {
 
     private void newWebRtcClient(String peer, String[] urls) {
         try {
-            PeerConnectionManager.add(webSocketClient, config, peer, urls);
+            PeerConnectionManager.addOrUpdate(webSocketClient, config, peer, urls);
         } catch (Exception e) {
             logger.error("Error connecting to peer: {}", e.getMessage());
         }
     }
 
-    private void handleConfigMessage(WebRtcSignalingMessage signalingMessage) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-            objectMapper.readerForUpdating(this.config).readValue(signalingMessage.getPayload());
-        } catch (Exception e) {
-            logger.error("Error processing CONFIG message: {}", e.getMessage());
-        }
+    private void handleConfigMessage(WebRtcSignalingMessage message) {
+        PeerConnectionManager.addConfiguration(message);
     }
 
     public void onConnectionEstablished() {

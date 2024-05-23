@@ -28,6 +28,7 @@ public class WebRtcWebSocketHandler implements WebSocketHandler {
         if (webSocketSession == null) {
             throw new WebSocketSessionNullException("WebSocket session is null, cannot send message");
         } else {
+            logger.info("Sending WebSocket message: {}", message);
             webSocketSession.sendMessage(message.toTextMessage());
         }
     }
@@ -65,7 +66,8 @@ public class WebRtcWebSocketHandler implements WebSocketHandler {
     @Override
     public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception)
             throws Exception {
-        logger.error("Transport error occurred for session id {} as: {}", session.getId(), exception.getMessage());
+        logger.error("Transport error occurred for session id {} as: {}", session.getId(), exception.getMessage(),
+                exception);
     }
 
     @Override

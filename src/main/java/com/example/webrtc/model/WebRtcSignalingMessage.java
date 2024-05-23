@@ -3,9 +3,11 @@ package com.example.webrtc.model;
 import org.springframework.web.socket.TextMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.onvoid.webrtc.RTCIceCandidate;
+import dev.onvoid.webrtc.RTCSessionDescription;
 
 /**
  * A WebRTC signaling message.
@@ -55,6 +57,11 @@ public class WebRtcSignalingMessage {
 
     public void setPayload(String payload) {
         this.payload = payload;
+    }
+
+    @Override
+    public String toString() {
+        return "WebRtcSignalingMessage [from=" + from + ", to=" + to + ", type=" + type + ", payload=" + payload + "]";
     }
 
     /**
@@ -127,6 +134,31 @@ public class WebRtcSignalingMessage {
         this.type = WebRtcSignalingMessageType.RESPONSE;
         this.to = peer;
         this.payload = String.join(",", urls);
+    }
+
+    /**
+     * Create a new WebRTC signaling message from a peer and a session description.
+     * 
+     * @param peer        The peer to send the message to.
+     * @param description The session description.
+     * @throws JsonProcessingException
+     */
+    public WebRtcSignalingMessage(String peer, RTCSessionDescription description) throws JsonProcessingException {
+        this.type = WebRtcSignalingMessageType.OFFER;
+        this.to = peer;
+        this.payload = objectMapper
+                .writeValueAsString(new WebRTCSessionDescription(WebRTCSdpType.offer, description.sdp));
+    }
+
+    /**
+     * Get SDP from ANSWER payload.
+     * 
+     * @param peer        The peer to send the message to.
+     * @param description The session description.
+     * @throws JsonProcessingException
+     */
+    public String toSdp() throws JsonMappingException, JsonProcessingException {
+        return objectMapper.readTree(payload).get("sdp").asText();
     }
 
 }
