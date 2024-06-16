@@ -15,14 +15,33 @@ import dev.onvoid.webrtc.RTCConfiguration;
 
 public class PeerConnectionManager {
     private static final Logger logger = LogManager.getLogger(PeerConnectionManager.class);
-    private static final RTCConfiguration config = new RTCConfiguration();
     private static final Map<String, WebRtcPeerConnection> peerConnections = new HashMap<>();
+    private static RTCConfiguration config = new RTCConfiguration();
+    private static WebRtcWebSocketClient webSocketClient;
 
     private PeerConnectionManager() {
         // Private constructor to hide the implicit public one
     }
 
-    public static void addOrUpdate(WebRtcWebSocketClient webSocketClient, RTCConfiguration config, String peer,
+    public static void handleRequest(WebRtcSignalingMessage message) {
+        String peer = message.getFrom();
+        String[] urls = MediaStreamManager.getAvailableUrls(message.getPayload());
+
+        try {
+            webSocketClient.sendMessage(new WebRtcSignalingMessage(peer, urls));
+
+            if (urls == null || urls.length == 0) {
+                logger.error("No available media stream URLs found");
+            } else {
+                logger.info("Available number of media stream URLs: {}", urls.length);
+                addOrUpdate(peer, urls);
+            }
+        } catch (Exception e) {
+            logger.error("Error sending RESPONSE message: {}", e.getMessage());
+        }
+    }
+
+    private static void addOrUpdate(String peer,
             String[] urls) {
         peerConnections.merge(peer, new WebRtcPeerConnection(webSocketClient, config, peer, urls),
                 (key, existingConnection) -> existingConnection.update(urls));
@@ -37,17 +56,24 @@ public class PeerConnectionManager {
         }
     }
 
-    public static void addAnswer(String peer, String answer) {
-    }
-
     public static void closeConnection(WebRtcSignalingMessage message) {
         peerConnections.computeIfPresent(message.getFrom(), (key, connection) -> {
             try {
                 connection.close();
             } catch (Exception e) {
-                logger.error("Error closing connection for peer {}", message.getFrom(), e);
+                logger.error("Error closing connection for peer {}", connection, e);
             }
             return null;
+        });
+    }
+
+    public static void closeConnection() {
+        peerConnections.values().forEach(connection -> {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                logger.error("Error closing connection for peer {}", connection, e);
+            }
         });
     }
 
@@ -73,4 +99,9 @@ public class PeerConnectionManager {
             logger.error("Error processing CONFIG message: {}", e.getMessage());
         }
     }
+
+    public static void setWebSocketClient(WebRtcWebSocketClient webSocketClient) {
+        PeerConnectionManager.webSocketClient = webSocketClient;
+    }
+
 }

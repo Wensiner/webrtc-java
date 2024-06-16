@@ -16,5 +16,5 @@ public class WebRTCSessionDescription {
     public String getSdp() {
         return sdp;
     }
-    
+
 }

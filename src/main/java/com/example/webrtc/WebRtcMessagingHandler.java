@@ -5,12 +5,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.example.webrtc.model.WebRtcSignalingMessage;
 
-import dev.onvoid.webrtc.RTCConfiguration;
-
 public class WebRtcMessagingHandler {
     private static final Logger logger = LogManager.getLogger(WebRtcMessagingHandler.class);
 
-    private final RTCConfiguration config = new RTCConfiguration();
     private WebRtcWebSocketClient webSocketClient;
     private long id;
 
@@ -30,7 +27,7 @@ public class WebRtcMessagingHandler {
         switch (message.getType()) {
 
             case CONFIG:
-                handleConfigMessage(message);
+                PeerConnectionManager.addConfiguration(message);
                 break;
 
             case REGISTER:
@@ -39,7 +36,7 @@ public class WebRtcMessagingHandler {
                 break;
 
             case REQUEST:
-                handleRequestMessage(message);
+                PeerConnectionManager.handleRequest(message);
                 break;
 
             case RESPONSE:
@@ -53,15 +50,15 @@ public class WebRtcMessagingHandler {
                 break;
 
             case ANSWER:
-                handleAnswerMessage(message);
+                PeerConnectionManager.addAnswer(message);
                 break;
 
             case CANDIDATE:
-                handleCandidateMessage(message);
+                PeerConnectionManager.addIceCandidate(message);
                 break;
 
             case ERROR:
-                handleErrorMessage(message);
+                PeerConnectionManager.closeConnection(message);
                 break;
 
             default:
@@ -71,57 +68,16 @@ public class WebRtcMessagingHandler {
         }
     }
 
-    private void handleErrorMessage(WebRtcSignalingMessage message) {
-        PeerConnectionManager.closeConnection(message);
-    }
-
-    private void handleCandidateMessage(WebRtcSignalingMessage message) {
-        PeerConnectionManager.addIceCandidate(message);
-    }
-
-    private void handleAnswerMessage(WebRtcSignalingMessage message) {
-        PeerConnectionManager.addAnswer(message);
-    }
-
-    private void handleRequestMessage(WebRtcSignalingMessage message) {
-        String peer = message.getFrom();
-        String[] urls = MediaStreamManager.getAvailableUrls(message.getPayload());
-
-        try {
-            webSocketClient.sendMessage(new WebRtcSignalingMessage(peer, urls));
-
-            if (urls == null || urls.length == 0) {
-                logger.error("No available media stream URLs found");
-            } else {
-                logger.info("Available number of media stream URLs: {}", urls.length);
-                newWebRtcClient(peer, urls);
-            }
-        } catch (Exception e) {
-            logger.error("Error sending RESPONSE message: {}", e.getMessage());
-        }
-    }
-
-    private void newWebRtcClient(String peer, String[] urls) {
-        try {
-            PeerConnectionManager.addOrUpdate(webSocketClient, config, peer, urls);
-        } catch (Exception e) {
-            logger.error("Error connecting to peer: {}", e.getMessage());
-        }
-    }
-
-    private void handleConfigMessage(WebRtcSignalingMessage message) {
-        PeerConnectionManager.addConfiguration(message);
-    }
-
     public void onConnectionEstablished() {
         try {
             webSocketClient.sendMessage(new WebRtcSignalingMessage(id));
+            PeerConnectionManager.setWebSocketClient(webSocketClient);
         } catch (Exception e) {
             logger.error("Error sending REGISTER message: {}", e.getMessage());
         }
     }
 
     public void onConnectionClosed() {
+        PeerConnectionManager.closeConnection();
     }
-
 }

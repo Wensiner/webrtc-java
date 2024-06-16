@@ -3,7 +3,6 @@ package com.example.webrtc.model;
 import org.springframework.web.socket.TextMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.onvoid.webrtc.RTCIceCandidate;
@@ -157,7 +156,7 @@ public class WebRtcSignalingMessage {
      * @param description The session description.
      * @throws JsonProcessingException
      */
-    public String toSdp() throws JsonMappingException, JsonProcessingException {
+    public String toSdp() throws JsonProcessingException {
         return objectMapper.readTree(payload).get("sdp").asText();
     }
 
